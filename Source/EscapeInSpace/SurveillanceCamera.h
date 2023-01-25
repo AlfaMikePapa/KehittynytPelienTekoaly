@@ -7,6 +7,15 @@
 #include "Toggleable.h"
 #include "SurveillanceCamera.generated.h"
 
+
+UENUM( BlueprintType )
+enum class CameraState : uint8 {
+	kSeeking,
+	kAnalyzing,
+	kAlarm,
+	kNumStates
+};
+
 UCLASS()
 class ESCAPEINSPACE_API ASurveillanceCamera : public AToggleable
 {
@@ -45,11 +54,14 @@ public:
   float TimeToRaiseAlarmFromDetection;
   
   float passedTimeSinceDetection;
-  
+
+  CameraState state;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	void SeekOperation( float DeltaTime );
+	void LookAtPlayer();
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

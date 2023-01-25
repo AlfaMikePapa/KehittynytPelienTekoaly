@@ -18,6 +18,7 @@ ASurveillanceCamera::ASurveillanceCamera()
   followMode = false;
   TimeToRaiseAlarmFromDetection = 0.0f;
   passedTimeSinceDetection = 0.0f;
+  state = CameraState::kSeeking;
 }
 
 // Called when the game starts or when spawned
@@ -44,6 +45,41 @@ void ASurveillanceCamera::BeginPlay()
 	
 }
 
+void ASurveillanceCamera::SeekOperation(float DeltaTime)
+{
+	if (lerpAlpha > 1.0f && holdRemaining <= 0.0f)
+	{
+		reverseDirection = true;
+		holdRemaining = holdTime;
+	}
+	else if (lerpAlpha < 0.0f && holdRemaining <= 0.0f)
+	{
+		reverseDirection = false;
+		holdRemaining = holdTime;
+	}
+	if (holdRemaining > 0.0f)
+	{
+		holdRemaining -= DeltaTime;
+		lerpAlpha = FMath::Clamp(lerpAlpha, 0.0f, 1.0f);
+	}
+	else
+	{
+		lerpAlpha = FMath::Clamp(lerpAlpha, 0.0f, 1.0f);
+		if (reverseDirection) lerpAlpha -= rotationSpeed * DeltaTime;
+		else                    lerpAlpha += rotationSpeed * DeltaTime;
+		FRotator newRot = FMath::Lerp(startPosition, endPosition, lerpAlpha);
+
+		SetActorRotation(newRot);
+	}
+}
+void ASurveillanceCamera::LookAtPlayer()
+{
+	// set rotation to match player.
+	// Camera model must point along X axis
+	FVector cameraToPlayer = detectedPlayer->GetActorLocation() - GetActorLocation();
+	SetActorRotation(cameraToPlayer.Rotation());
+}
+
 // Called every frame
 void ASurveillanceCamera::Tick(float DeltaTime)
 {
@@ -53,10 +89,7 @@ void ASurveillanceCamera::Tick(float DeltaTime)
   
   if ( IsPlayerDetected() )
   {
-	  // set rotation to match player.
-	  // Camera model must point along X axis
-	  FVector cameraToPlayer = detectedPlayer->GetActorLocation() - GetActorLocation();
-	  SetActorRotation(cameraToPlayer.Rotation());
+	  LookAtPlayer();
 	  passedTimeSinceDetection += DeltaTime;
 	  if ( passedTimeSinceDetection >= TimeToRaiseAlarmFromDetection)
 	  {
@@ -64,32 +97,7 @@ void ASurveillanceCamera::Tick(float DeltaTime)
 	  }
 	  return;
   }
-  
-  if ( lerpAlpha > 1.0f && holdRemaining <= 0.0f )
-  {
-      reverseDirection = true;
-      holdRemaining = holdTime;
-  } 
-  else if ( lerpAlpha < 0.0f && holdRemaining <= 0.0f )
-  {
-      reverseDirection = false;
-      holdRemaining = holdTime;
-  }
-  if ( holdRemaining > 0.0f)
-  {
-        holdRemaining -= DeltaTime;
-        lerpAlpha = FMath::Clamp(lerpAlpha, 0.0f, 1.0f);
-  }
-  else 
-  { 
-      lerpAlpha = FMath::Clamp(lerpAlpha, 0.0f, 1.0f);
-      if ( reverseDirection ) lerpAlpha -= rotationSpeed*DeltaTime;
-      else                    lerpAlpha += rotationSpeed*DeltaTime;
-      FRotator newRot = FMath::Lerp(startPosition, endPosition, lerpAlpha);
-	  
-	  SetActorRotation(newRot);
-  }
-		
+  SeekOperation(DeltaTime);
 }
 
 // Called to bind functionality to input
