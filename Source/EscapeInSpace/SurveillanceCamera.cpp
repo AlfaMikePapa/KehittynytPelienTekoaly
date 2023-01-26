@@ -6,43 +6,45 @@
 // Sets default values
 ASurveillanceCamera::ASurveillanceCamera()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-  PrimaryActorTick.bCanEverTick = true;
-  lerpAlpha = 0.0f;
-  holdTime = 0.0f;
-  rotationSpeed = 1.0f;
-  reverseDirection = false;
-  holdRemaining = 0.0f;
-  detectedPlayer = nullptr;
-  isActive = true;
-  followMode = false;
-  TimeToRaiseAlarmFromDetection = 0.0f;
-  passedTimeSinceDetection = 0.0f;
-  state = CameraState::kSeeking;
+	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+	lerpAlpha = 0.0f;
+	holdTime = 0.0f;
+	rotationSpeed = 1.0f;
+	reverseDirection = false;
+	holdRemaining = 0.0f;
+	detectedPlayer = nullptr;
+	isActive = true;
+	followMode = false;
+	//TimeToRaiseAlarmFromDetection = 0.0f;
+	passedTimeSinceStateChange = 0.0f;
+	state = CameraState::kSeeking;
+	alarmTimeSeconds = DEFAULT_ALARM_TIME_IN_SECONDS;
+	analyzeTimeSeconds = DEFAULT_ANALYZE_TIME_IN_SECONDS;
 }
 
 // Called when the game starts or when spawned
 void ASurveillanceCamera::BeginPlay()
 {
 	Super::BeginPlay();
-	if ( startLookAt == nullptr ) 
+	if (startLookAt == nullptr)
 	{
-			UE_LOG(LogTemp, Error, TEXT("Start look at not set"));
+		UE_LOG(LogTemp, Error, TEXT("Start look at not set"));
 	}
-	else 
-	{ 
-		startPosition = (startLookAt->GetActorLocation() - GetActorLocation()).Rotation(); 
+	else
+	{
+		startPosition = (startLookAt->GetActorLocation() - GetActorLocation()).Rotation();
 	}
-	
-	if ( endLookAt == nullptr ) 
+
+	if (endLookAt == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("End look at not set"));
 	}
-	else 
-	{ 
-		endPosition = (endLookAt->GetActorLocation() - GetActorLocation()).Rotation(); 
+	else
+	{
+		endPosition = (endLookAt->GetActorLocation() - GetActorLocation()).Rotation();
 	}
-	
+
 }
 
 void ASurveillanceCamera::SeekOperation(float DeltaTime)
@@ -83,21 +85,57 @@ void ASurveillanceCamera::LookAtPlayer()
 // Called every frame
 void ASurveillanceCamera::Tick(float DeltaTime)
 {
-  Super::Tick(DeltaTime);
-  
-  if ( isActive == false ) return;
-  
-  if ( IsPlayerDetected() )
-  {
-	  LookAtPlayer();
-	  passedTimeSinceDetection += DeltaTime;
-	  if ( passedTimeSinceDetection >= TimeToRaiseAlarmFromDetection)
-	  {
-			OnRaiseAlarm();
-	  }
-	  return;
+	Super::Tick(DeltaTime);
+
+	if (isActive == false) return;
+
+	switch (state)
+	{
+	case CameraState::kSeeking:
+			if (IsPlayerDetected())
+			{
+				SetCameraState(CameraState::kAnalyzing);
+			}
+			else
+			{
+				SeekOperation(DeltaTime);
+			}
+
+			break;
+	case CameraState::kAnalyzing:
+			if (IsPlayerDetected())
+			{
+				LookAtPlayer();
+				passedTimeSinceStateChange += DeltaTime;
+				if ( passedTimeSinceStateChange >= analyzeTimeSeconds )
+				{
+					SetCameraState(CameraState::kAlarm);
+				}
+			}
+			else
+			{
+				SetCameraState(CameraState::kSeeking);
+
+			}
+			break;
+			  
+			case CameraState::kAlarm:
+					passedTimeSinceStateChange += DeltaTime;
+					if (passedTimeSinceStateChange >= alarmTimeSeconds)
+					{
+						OnRaiseAlarm();
+						SetCameraState(CameraState::kSeeking);
+					}
+				break;  
   }
-  SeekOperation(DeltaTime);
+
+}
+
+void ASurveillanceCamera::SetCameraState(CameraState newState)
+{
+	state = newState;
+	passedTimeSinceStateChange = 0.0f;
+	OnStateChange(state);
 }
 
 // Called to bind functionality to input
@@ -131,6 +169,12 @@ void ASurveillanceCamera::Enable()
 
 void ASurveillanceCamera::OnRaiseAlarm_Implementation()
 {
+
+}
+
+void ASurveillanceCamera::OnStateChange_Implementation( CameraState  newState )
+{
+
 }
 
 void ASurveillanceCamera::SetDetectedPlayer(AActor *player)
@@ -139,8 +183,8 @@ void ASurveillanceCamera::SetDetectedPlayer(AActor *player)
   detectedPlayer = player;
   followMode = (detectedPlayer != nullptr);
   UE_LOG(LogTemp, Log, TEXT("Setting detected player to %sw"), *AActor::GetDebugName(player));
-  if ( detectedPlayer == nullptr )
-	passedTimeSinceDetection = 0.0;
+  //if ( detectedPlayer == nullptr )
+	//passedTimeSinceStateChange = 0.0;
   
 }
 bool ASurveillanceCamera::IsPlayerDetected()
