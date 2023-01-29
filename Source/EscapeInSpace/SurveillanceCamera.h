@@ -57,7 +57,7 @@ public:
   float analyzeTimeSeconds;
   
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Settings")
-	  float alarmTimeSeconds;
+  float alarmTimeSeconds;
 
   float passedTimeSinceStateChange;
 
@@ -86,9 +86,8 @@ public:
 	//void OnEnable();
 
 
-	UFUNCTION(BlueprintCallable, Category = "Surveillance Camera")
-	void SetCameraState(CameraState newState);
-
+  UFUNCTION(BlueprintCallable, Category = "Surveillance Camera")
+  void SetCameraState(CameraState newState);
 
   UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category="Surveillance Camera")
   void OnRaiseAlarm();
