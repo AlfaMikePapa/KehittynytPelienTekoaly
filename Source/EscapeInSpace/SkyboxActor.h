@@ -20,11 +20,14 @@ public:
 	ASkyboxActor();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		UProceduralMeshComponent* mesh;
+	UProceduralMeshComponent* mesh;
 
 	TArray<FVector> Vertices;
 	TArray<FVector2D> TexCoords;
 	TArray<int32> Triangles;
+
+	//float VerticalSlices = 2;
+	//float HorizontalSlices = 2;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		int VerticalSlices = MIN_VERTICAL_SLICES;
@@ -42,5 +45,3 @@ public:
 	void GenerateSphere(int verticalSlices, int horizontalSlices);
 	void PostActorCreated() override;
 };
-
-

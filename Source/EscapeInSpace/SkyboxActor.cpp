@@ -116,7 +116,7 @@ void ASkyboxActor::GenerateSphere(int verticalSlices, int horizontalSlices)
 	//Triangles.Add(4);
 	//Triangles.Add(1);
 
-	//// alapyramidi
+	// alapyramidi
 
 	//Triangles.Add(5);
 	//Triangles.Add(2);
@@ -140,8 +140,7 @@ void ASkyboxActor::GenerateSphere(int verticalSlices, int horizontalSlices)
 
 void ASkyboxActor::PostActorCreated()
 {
-	GenerateSphere(FMath::Max(VerticalSlices, MIN_VERTICAL_SLICES), FMath::Max(HorizontalSlices, MIN_HORIZONTAL_SLICES));
+	GenerateSphere(FMath::Max(VerticalSlices, MIN_VERTICAL_SLICES), 
+					FMath::Max(HorizontalSlices, MIN_HORIZONTAL_SLICES));
 }
-
-
 
