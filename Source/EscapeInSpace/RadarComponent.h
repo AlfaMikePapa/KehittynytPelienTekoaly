@@ -7,12 +7,12 @@
 #include "RadarComponent.generated.h"
 
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class ESCAPEINSPACE_API URadarComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	URadarComponent();
 
@@ -20,9 +20,25 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+	UFUNCTION(BlueprintCallable)
+		TArray<FVector2D> GetPointsOnPlane();
+
+	UFUNCTION(BlueprintCallable)
+		void UpdateTrackedObjects();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<AActor*> TrackedObjects;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		float MaxRadarDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		TArray<float> RealDistanceToTrackedObjects;
+
+	UFUNCTION(BlueprintCallable)
+		float GetRealDistanceToTrackedObjects(int32 index);
 };
